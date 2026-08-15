@@ -248,7 +248,7 @@
     <h1 id="titleGoal">Rumbo a la meta</h1>
     <div class="meta-edit">
       Meta total: $
-      <input type="number" id="metaInput" class="mono" value="1225000">
+      <input type="number" inputmode="numeric" pattern="[0-9]*" id="metaInput" class="mono" value="0">
       <span style="color:var(--text-dim);">CLP</span>
     </div>
   </header>
@@ -319,17 +319,17 @@
     <div class="entry-row">
       <div class="field cash">
         <label>Efectivo ($)</label>
-        <input type="number" id="efectivo" placeholder="0" min="0">
+        <input type="number" inputmode="numeric" pattern="[0-9]*" id="efectivo" placeholder="0" min="0">
       </div>
       <div class="field card">
         <label>Tarjeta ($)</label>
-        <input type="number" id="tarjeta" placeholder="0" min="0">
+        <input type="number" inputmode="numeric" pattern="[0-9]*" id="tarjeta" placeholder="0" min="0">
       </div>
     </div>
     <div class="entry-row">
       <div class="field expense">
         <label>Gastos ($)</label>
-        <input type="number" id="gastos" placeholder="0" min="0">
+        <input type="number" inputmode="numeric" pattern="[0-9]*" id="gastos" placeholder="0" min="0">
       </div>
     </div>
     <button type="submit" class="add">Agregar avance</button>
@@ -475,7 +475,7 @@ document.getElementById('restoreBtn').addEventListener('click', async ()=>{
 });
 
 /* ---- App state ---- */
-let meta = 1225000;
+let meta = 0;
 let entries = [];
 let chart = null;
 
