@@ -15,6 +15,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --bg: #0a0c0e;
@@ -60,7 +62,43 @@
   }
   .meta-edit input:focus{ border-color:var(--orange); }
 
-  /* --- Route / signature element --- */
+  .install-banner{
+    display:flex; align-items:center; gap:10px;
+    background:linear-gradient(135deg, #14301f, #15181b); border:1px solid var(--green-dim);
+    border-radius:14px; padding:12px 12px; margin-bottom:16px;
+  }
+  .install-text{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  .install-text strong{ font-size:13px; }
+  .install-text span{ font-size:11.5px; color:var(--text-dim); }
+  .install-btn{
+    background:var(--green); color:#04180d; border:none; border-radius:9px;
+    padding:9px 14px; font-weight:700; font-size:13px; font-family:'Space Grotesk',sans-serif;
+    cursor:pointer; white-space:nowrap;
+  }
+  .install-close{
+    background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; padding:4px;
+  }
+
+  .ios-guide{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:14px;
+    padding:14px; margin-bottom:16px;
+  }
+  .ios-guide-row{
+    display:flex; align-items:center; gap:10px; font-size:13.5px; color:var(--text);
+    padding:6px 0; border-bottom:1px solid var(--hairline);
+  }
+  .ios-guide-row:last-of-type{ border-bottom:none; }
+  .ios-guide .step{
+    width:20px; height:20px; border-radius:50%; background:var(--green); color:#04180d;
+    font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; font-family:'JetBrains Mono',monospace;
+  }
+  .share-icon{ font-size:13px; }
+  #iosGuideClose{
+    width:100%; margin-top:10px; background:var(--panel-2); color:var(--text);
+    border:1px solid var(--hairline); border-radius:10px; padding:9px; font-weight:600; font-size:13px;
+  }
+
   .route-card{
     background:var(--panel); border-radius:var(--radius); padding:22px 18px 18px;
     margin-bottom:16px; border:1px solid var(--hairline);
@@ -169,49 +207,44 @@
 
   .footer-note{ text-align:center; color:var(--text-dim); font-size:11px; margin-top:22px; font-family:'JetBrains Mono',monospace;}
 
-  .install-banner{
-    display:flex; align-items:center; gap:10px;
-    background:linear-gradient(135deg, #14301f, #15181b); border:1px solid var(--green-dim);
-    border-radius:14px; padding:12px 12px; margin-bottom:16px;
+  .cloud-card{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
+    padding:16px; margin-bottom:16px;
   }
-  .install-text{ flex:1; display:flex; flex-direction:column; gap:2px; }
-  .install-text strong{ font-size:13px; }
-  .install-text span{ font-size:11.5px; color:var(--text-dim); }
-  .install-btn{
-    background:var(--green); color:#04180d; border:none; border-radius:9px;
-    padding:9px 14px; font-weight:700; font-size:13px; font-family:'Space Grotesk',sans-serif;
-    cursor:pointer; white-space:nowrap;
+  .cloud-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .cloud-dot{ width:8px; height:8px; border-radius:50%; background:var(--text-dim); flex-shrink:0; }
+  .cloud-dot.ok{ background:var(--green); }
+  .cloud-dot.pending{ background:var(--orange); }
+  .cloud-status{ font-size:12.5px; color:var(--text-dim); }
+  .code-box{
+    display:flex; align-items:center; gap:8px; background:var(--panel-2);
+    border:1px solid var(--hairline); border-radius:10px; padding:10px 12px; margin-bottom:10px;
   }
-  .install-close{
-    background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; padding:4px;
+  .code-box span{ flex:1; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.02em; word-break:break-all; color:var(--green); }
+  .code-box button{
+    background:var(--panel); border:1px solid var(--hairline); color:var(--text);
+    border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer; font-family:'Space Grotesk',sans-serif;
   }
-
-  .ios-guide{
-    background:var(--panel); border:1px solid var(--hairline); border-radius:14px;
-    padding:14px; margin-bottom:16px;
+  .cloud-hint{ font-size:11.5px; color:var(--text-dim); margin-bottom:12px; line-height:1.5; }
+  .restore-row{ display:flex; gap:8px; }
+  .restore-row input{
+    flex:1; background:var(--panel-2); border:1px solid var(--hairline); border-radius:10px;
+    padding:9px 10px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; outline:none;
   }
-  .ios-guide-row{
-    display:flex; align-items:center; gap:10px; font-size:13.5px; color:var(--text);
-    padding:6px 0; border-bottom:1px solid var(--hairline);
+  .restore-row button{
+    background:var(--blue); color:#031627; border:none; border-radius:10px;
+    padding:9px 14px; font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap;
   }
-  .ios-guide-row:last-of-type{ border-bottom:none; }
-  .ios-guide .step{
-    width:20px; height:20px; border-radius:50%; background:var(--green); color:#04180d;
-    font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
-    flex-shrink:0; font-family:'JetBrains Mono',monospace;
-  }
-  .share-icon{ font-size:13px; }
-  #iosGuideClose{
-    width:100%; margin-top:10px; background:var(--panel-2); color:var(--text);
-    border:1px solid var(--hairline); border-radius:10px; padding:9px; font-weight:600; font-size:13px;
-  }
+  .restore-msg{ font-size:12px; margin-top:8px; }
+  .restore-msg.ok{ color:var(--green); }
+  .restore-msg.err{ color:var(--red); }
 </style>
 </head>
 <body>
 <div class="app">
 
   <header>
-    <p class="eyebrow">Meta de ahorro &mdash; Uber</p>
+    <p class="eyebrow">Meta de ahorro &mdash; App</p>
     <h1 id="titleGoal">Rumbo a la meta</h1>
     <div class="meta-edit">
       Meta total: $
@@ -305,10 +338,143 @@
   <div class="section-title">Historial</div>
   <div class="list" id="entriesList"></div>
 
-  <div class="footer-note">Tus datos se guardan solo en este celular/navegador — nadie más los ve.</div>
+  <div class="section-title">Respaldo en la nube</div>
+  <div class="cloud-card">
+    <div class="cloud-row">
+      <div class="cloud-dot" id="cloudDot"></div>
+      <span class="cloud-status" id="cloudStatus">Conectando...</span>
+    </div>
+    <div class="code-box">
+      <span id="codeDisplay">generando código...</span>
+      <button id="copyCodeBtn">Copiar</button>
+    </div>
+    <div class="cloud-hint">Guarda este código en un lugar seguro (nota, WhatsApp a ti mismo). Si pierdes el celular, úsalo para recuperar tus datos en otro dispositivo. Es privado: solo tú puedes usarlo.</div>
+    <div class="restore-row">
+      <input type="text" id="restoreInput" placeholder="Pegar código para restaurar...">
+      <button id="restoreBtn">Restaurar</button>
+    </div>
+    <div class="restore-msg" id="restoreMsg"></div>
+  </div>
+
+  <div class="footer-note">Tus datos se guardan en este celular y respaldados en la nube con tu código privado.</div>
 </div>
 
 <script>
+/* ---- Firebase ---- */
+const firebaseConfig = {
+  apiKey: "AIzaSyB5OrfnbUHDZnhl5yDCnq5nsnFC1q4bSlg",
+  authDomain: "metas-financieras-8771c.firebaseapp.com",
+  projectId: "metas-financieras-8771c",
+  storageBucket: "metas-financieras-8771c.firebasestorage.app",
+  messagingSenderId: "1097058851900",
+  appId: "1:1097058851900:web:a16a4d3c999c02634df739"
+};
+
+let db = null;
+let firebaseReady = false;
+try{
+  if(typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseReady = true;
+  }
+}catch(e){
+  console.error('No se pudo iniciar Firebase', e);
+}
+
+function generateCode(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
+}
+
+let myCode = localStorage.getItem('meta_uber_code');
+if(!myCode){
+  myCode = generateCode();
+  localStorage.setItem('meta_uber_code', myCode);
+}
+document.getElementById('codeDisplay').textContent = myCode;
+
+document.getElementById('copyCodeBtn').addEventListener('click', ()=>{
+  navigator.clipboard.writeText(myCode).then(()=>{
+    const btn = document.getElementById('copyCodeBtn');
+    const old = btn.textContent;
+    btn.textContent = '¡Copiado!';
+    setTimeout(()=> btn.textContent = old, 1500);
+  });
+});
+
+function setCloudStatus(state, text){
+  const dot = document.getElementById('cloudDot');
+  dot.className = 'cloud-dot' + (state === 'ok' ? ' ok' : state === 'pending' ? ' pending' : '');
+  document.getElementById('cloudStatus').textContent = text;
+}
+
+let syncTimer = null;
+function scheduleCloudSync(){
+  if(!firebaseReady){
+    setCloudStatus('', 'Sin conexión con la nube');
+    return;
+  }
+  setCloudStatus('pending', 'Guardando respaldo...');
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(async ()=>{
+    try{
+      await db.collection('backups').doc(myCode).set({
+        meta: meta,
+        entries: entries,
+        updatedAt: Date.now()
+      });
+      setCloudStatus('ok', 'Respaldado en la nube ✓');
+    }catch(e){
+      console.error('Error al respaldar', e);
+      setCloudStatus('', 'Sin conexión — se reintentará');
+    }
+  }, 900);
+}
+
+document.getElementById('restoreBtn').addEventListener('click', async ()=>{
+  const code = document.getElementById('restoreInput').value.trim();
+  const msg = document.getElementById('restoreMsg');
+  if(!code){ return; }
+  if(!firebaseReady){
+    msg.className = 'restore-msg err';
+    msg.textContent = 'Sin conexión con la nube en este momento. Intenta más tarde.';
+    return;
+  }
+  msg.className = 'restore-msg';
+  msg.textContent = 'Buscando...';
+  try{
+    const doc = await db.collection('backups').doc(code).get();
+    if(!doc.exists){
+      msg.className = 'restore-msg err';
+      msg.textContent = 'No se encontró ese código. Revísalo e intenta de nuevo.';
+      return;
+    }
+    const data = doc.data();
+    meta = data.meta || meta;
+    entries = data.entries || [];
+    myCode = code;
+    localStorage.setItem('meta_uber_code', myCode);
+    localStorage.setItem('meta_uber_meta', JSON.stringify(meta));
+    localStorage.setItem('meta_uber_entries', JSON.stringify(entries));
+    document.getElementById('codeDisplay').textContent = myCode;
+    document.getElementById('metaInput').value = meta;
+    msg.className = 'restore-msg ok';
+    msg.textContent = '¡Datos restaurados con éxito!';
+    document.getElementById('restoreInput').value = '';
+    setCloudStatus('ok', 'Respaldado en la nube ✓');
+    render();
+  }catch(e){
+    console.error(e);
+    msg.className = 'restore-msg err';
+    msg.textContent = 'Error al restaurar. Revisa tu conexión e intenta de nuevo.';
+  }
+});
+
+/* ---- App state ---- */
 let meta = 1225000;
 let entries = [];
 let chart = null;
@@ -319,23 +485,50 @@ async function loadData(){
   try{
     const m = localStorage.getItem('meta_uber_meta');
     if(m) meta = JSON.parse(m);
-  }catch(e){ /* no meta saved yet */ }
+  }catch(e){}
   try{
     const e = localStorage.getItem('meta_uber_entries');
     if(e) entries = JSON.parse(e);
-  }catch(e){ /* no entries saved yet */ }
+  }catch(e){}
   document.getElementById('metaInput').value = meta;
   document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
   render();
+
+  try{
+    if(!firebaseReady){
+      setCloudStatus('', 'Sin conexión con la nube');
+      return;
+    }
+    const doc = await db.collection('backups').doc(myCode).get();
+    if(doc.exists){
+      const data = doc.data();
+      const localUpdatedAt = parseInt(localStorage.getItem('meta_uber_updatedAt') || '0');
+      if(data.updatedAt && data.updatedAt > localUpdatedAt){
+        meta = data.meta || meta;
+        entries = data.entries || [];
+        document.getElementById('metaInput').value = meta;
+        render();
+      }
+      setCloudStatus('ok', 'Respaldado en la nube ✓');
+    } else {
+      setCloudStatus('pending', 'Aún sin respaldo — se creará al registrar algo');
+    }
+  }catch(e){
+    setCloudStatus('', 'Sin conexión con la nube');
+  }
 }
 
 async function saveMeta(){
   try{ localStorage.setItem('meta_uber_meta', JSON.stringify(meta)); }
   catch(e){ console.error('No se pudo guardar la meta', e); }
+  localStorage.setItem('meta_uber_updatedAt', Date.now().toString());
+  scheduleCloudSync();
 }
 async function saveEntries(){
   try{ localStorage.setItem('meta_uber_entries', JSON.stringify(entries)); }
   catch(e){ console.error('No se pudieron guardar los registros', e); }
+  localStorage.setItem('meta_uber_updatedAt', Date.now().toString());
+  scheduleCloudSync();
 }
 
 document.getElementById('metaInput').addEventListener('change', (ev)=>{
@@ -381,7 +574,6 @@ function render(){
   document.getElementById('roadFill').style.width = pct + '%';
   document.getElementById('carIcon').style.left = 'calc(' + pct + '% )';
 
-  // entries list
   const listEl = document.getElementById('entriesList');
   if(entries.length === 0){
     listEl.innerHTML = '<div class="empty">Aún no hay registros. Agrega tu primer avance arriba.</div>';
@@ -469,8 +661,7 @@ const installBanner = document.getElementById('installBanner');
 const iosGuide = document.getElementById('iosGuide');
 
 function dismissedRecently(){
-  const dismissed = sessionStorage.getItem('installDismissed');
-  return dismissed === '1';
+  return sessionStorage.getItem('installDismissed') === '1';
 }
 
 if(!isStandalone && !dismissedRecently()){
@@ -509,7 +700,7 @@ document.getElementById('iosGuideClose').addEventListener('click', ()=>{
 
 /* ---- Service worker: permite abrir la app sin conexión una vez instalada ---- */
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{ /* offline caching no disponible en este entorno */ });
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
 </body>
