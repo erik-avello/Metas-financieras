@@ -326,8 +326,16 @@
   .fs-value.card{ color:var(--blue); }
   .fs-value.expense{ color:var(--red); }
   .fs-value.neto{ color:var(--text); }
-  .filter-chart-wrap{ height:130px; }
-  .filter-empty{ font-size:12px; color:var(--text-dim); text-align:center; padding:16px 0; }
+  .history-filter{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
+    padding:14px; margin-bottom:10px;
+  }
+  .history-filter .filter-dates{ margin-bottom:0; align-items:flex-end; }
+  .history-filter .filter-stats{ margin-top:12px; margin-bottom:0; }
+  .filter-clear-btn{
+    background:var(--panel-2); border:1px solid var(--hairline); color:var(--text-dim);
+    border-radius:9px; width:36px; height:36px; flex-shrink:0; cursor:pointer; font-size:14px;
+  }
 
   /* ---- Chart toggle ---- */
   .chart-toggle{ display:flex; gap:8px; margin-bottom:10px; }
@@ -480,6 +488,25 @@
   </form>
 
   <div class="section-title">Historial</div>
+  <div class="history-filter">
+    <div class="filter-dates">
+      <div class="filter-field">
+        <label>Desde</label>
+        <input type="date" id="histDesde">
+      </div>
+      <div class="filter-field">
+        <label>Hasta</label>
+        <input type="date" id="histHasta">
+      </div>
+      <button class="filter-clear-btn" id="histClearBtn" title="Quitar filtro" style="display:none;">✕</button>
+    </div>
+    <div class="filter-stats" id="histFilterStats" style="display:none;">
+      <div class="filter-stat"><span class="fs-label">Efectivo</span><span class="fs-value cash" id="histEfectivo">$0</span></div>
+      <div class="filter-stat"><span class="fs-label">Tarjeta</span><span class="fs-value card" id="histTarjeta">$0</span></div>
+      <div class="filter-stat"><span class="fs-label">Gastos</span><span class="fs-value expense" id="histGastos">$0</span></div>
+      <div class="filter-stat"><span class="fs-label">Neto filtrado</span><span class="fs-value neto" id="histNeto">$0</span></div>
+    </div>
+  </div>
   <div class="list" id="entriesList"></div>
   <button class="ver-todo-btn" id="verTodoBtn" style="display:none;">Ver historial completo</button>
 
@@ -494,30 +521,6 @@
   <div class="drawer-header">
     <h2>Menú</h2>
     <button class="drawer-close" id="drawerClose">✕</button>
-  </div>
-
-  <div class="drawer-section-title">Filtrar por fecha</div>
-  <div class="filter-panel">
-    <div class="filter-dates">
-      <div class="filter-field">
-        <label>Desde</label>
-        <input type="date" id="filterDesde">
-      </div>
-      <div class="filter-field">
-        <label>Hasta</label>
-        <input type="date" id="filterHasta">
-      </div>
-    </div>
-    <div class="filter-stats">
-      <div class="filter-stat"><span class="fs-label">Efectivo</span><span class="fs-value cash" id="filterEfectivo">$0</span></div>
-      <div class="filter-stat"><span class="fs-label">Tarjeta</span><span class="fs-value card" id="filterTarjeta">$0</span></div>
-      <div class="filter-stat"><span class="fs-label">Gastos</span><span class="fs-value expense" id="filterGastos">$0</span></div>
-      <div class="filter-stat"><span class="fs-label">Neto del rango</span><span class="fs-value neto" id="filterNeto">$0</span></div>
-    </div>
-    <div class="filter-chart-wrap">
-      <canvas id="filterChart"></canvas>
-    </div>
-    <div class="filter-empty" id="filterEmpty" style="display:none;">No hay registros en ese rango de fechas.</div>
   </div>
 
   <div class="drawer-section-title">Respaldo en la nube</div>
@@ -674,12 +677,10 @@ document.getElementById('restoreBtn').addEventListener('click', async ()=>{
     msg.textContent = '¡Datos restaurados con éxito!';
     document.getElementById('restoreInput').value = '';
     setCloudStatus('ok', 'Respaldado en la nube ✓');
+    // Los datos cambiaron por completo: quitamos cualquier filtro de fecha activo
+    document.getElementById('histDesde').value = '';
+    document.getElementById('histHasta').value = '';
     render();
-    // Los datos cambiaron por completo: reseteamos el rango de fechas del filtro
-    document.getElementById('filterDesde').value = '';
-    document.getElementById('filterHasta').value = '';
-    initFilterDefaults();
-    renderFilterChart();
   }catch(e){
     console.error(e);
     msg.className = 'restore-msg err';
@@ -691,7 +692,6 @@ document.getElementById('restoreBtn').addEventListener('click', async ()=>{
 let meta = 0;
 let entries = [];
 let chart = null;
-let filterChartInstance = null;
 let chartMode = 'total'; // 'total' | 'gastos'
 
 const fmt = (n) => '$' + Math.round(n).toLocaleString('es-CL');
@@ -727,8 +727,6 @@ const drawerOverlay = document.getElementById('drawerOverlay');
 function openDrawer(){
   drawer.classList.add('open');
   drawerOverlay.classList.add('open');
-  initFilterDefaults();
-  renderFilterChart();
 }
 function closeDrawer(){
   drawer.classList.remove('open');
@@ -738,9 +736,14 @@ document.getElementById('menuBtn').addEventListener('click', openDrawer);
 document.getElementById('drawerClose').addEventListener('click', closeDrawer);
 drawerOverlay.addEventListener('click', closeDrawer);
 
-/* ---- Filtro por fecha (dentro del drawer) ---- */
-document.getElementById('filterDesde').addEventListener('change', renderFilterChart);
-document.getElementById('filterHasta').addEventListener('change', renderFilterChart);
+/* ---- Filtro por fecha del historial (afecta lista + gráfico principal) ---- */
+document.getElementById('histDesde').addEventListener('change', render);
+document.getElementById('histHasta').addEventListener('change', render);
+document.getElementById('histClearBtn').addEventListener('click', ()=>{
+  document.getElementById('histDesde').value = '';
+  document.getElementById('histHasta').value = '';
+  render();
+});
 
 /* ---- Toggle del gráfico principal: Total vs Gastos ---- */
 const chartToggleTotal = document.getElementById('chartToggleTotal');
@@ -848,9 +851,38 @@ function deleteEntry(id){
   entries = entries.filter(e => e.id !== id);
   saveEntries();
   render();
-  if(document.getElementById('historyModalOverlay').classList.contains('open')){
-    renderHistoryFull();
-  }
+}
+
+/* ---- Filtro de fechas del historial (afecta lista + gráfico) ---- */
+function getFilteredEntries(){
+  const desde = document.getElementById('histDesde').value;
+  const hasta = document.getElementById('histHasta').value;
+  let filtered = entries.slice();
+  if(desde) filtered = filtered.filter(e => e.fecha >= desde);
+  if(hasta) filtered = filtered.filter(e => e.fecha <= hasta);
+  return filtered.sort((a,b)=> a.fecha.localeCompare(b.fecha));
+}
+
+function renderHistoryFilterStats(filtered){
+  const desde = document.getElementById('histDesde').value;
+  const hasta = document.getElementById('histHasta').value;
+  const statsRow = document.getElementById('histFilterStats');
+  const clearBtn = document.getElementById('histClearBtn');
+  const activo = !!(desde || hasta);
+
+  clearBtn.style.display = activo ? 'flex' : 'none';
+  statsRow.style.display = activo ? 'grid' : 'none';
+  if(!activo) return;
+
+  const fEfectivo = filtered.reduce((s,e)=> s + e.efectivo, 0);
+  const fTarjeta = filtered.reduce((s,e)=> s + e.tarjeta, 0);
+  const fGastos = filtered.reduce((s,e)=> s + (e.gastos || 0), 0);
+  const fNeto = fEfectivo + fTarjeta - fGastos;
+
+  document.getElementById('histEfectivo').textContent = fmt(fEfectivo);
+  document.getElementById('histTarjeta').textContent = fmt(fTarjeta);
+  document.getElementById('histGastos').textContent = fmt(fGastos);
+  document.getElementById('histNeto').textContent = fmt(fNeto);
 }
 
 function buildEntryRow(e){
@@ -869,11 +901,12 @@ function buildEntryRow(e){
 
 function renderHistoryFull(){
   const listEl = document.getElementById('entriesListFull');
-  if(entries.length === 0){
-    listEl.innerHTML = '<div class="empty">Aún no hay registros.</div>';
+  const filtered = getFilteredEntries();
+  if(filtered.length === 0){
+    listEl.innerHTML = '<div class="empty">No hay registros en este rango.</div>';
     return;
   }
-  listEl.innerHTML = entries.slice().reverse().map(buildEntryRow).join('');
+  listEl.innerHTML = filtered.slice().reverse().map(buildEntryRow).join('');
 }
 
 function render(){
@@ -895,18 +928,28 @@ function render(){
   const HISTORY_LIMIT = 5;
   const listEl = document.getElementById('entriesList');
   const verTodoBtn = document.getElementById('verTodoBtn');
-  if(entries.length === 0){
-    listEl.innerHTML = '<div class="empty">Aún no hay registros. Agrega tu primer avance arriba.</div>';
+  const filtered = getFilteredEntries();
+  renderHistoryFilterStats(filtered);
+
+  if(filtered.length === 0){
+    listEl.innerHTML = entries.length === 0
+      ? '<div class="empty">Aún no hay registros. Agrega tu primer avance arriba.</div>'
+      : '<div class="empty">No hay registros en ese rango de fechas.</div>';
     verTodoBtn.style.display = 'none';
   } else {
-    const reversed = entries.slice().reverse();
+    const reversed = filtered.slice().reverse();
     listEl.innerHTML = reversed.slice(0, HISTORY_LIMIT).map(buildEntryRow).join('');
-    if(entries.length > HISTORY_LIMIT){
+    if(filtered.length > HISTORY_LIMIT){
       verTodoBtn.style.display = 'block';
-      verTodoBtn.textContent = `Ver historial completo (${entries.length})`;
+      verTodoBtn.textContent = `Ver historial completo (${filtered.length})`;
     } else {
       verTodoBtn.style.display = 'none';
     }
+  }
+
+  // Si el modal del historial completo está abierto, lo mantenemos sincronizado
+  if(document.getElementById('historyModalOverlay').classList.contains('open')){
+    renderHistoryFull();
   }
 
   renderChart();
@@ -918,7 +961,7 @@ function formatDate(iso){
 }
 
 function renderChart(){
-  const sorted = entries.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha));
+  const sorted = getFilteredEntries();
   const labels = [];
   const totalData = [];
   const gastosData = [];
@@ -932,7 +975,7 @@ function renderChart(){
     totalData.push(runningTotal);
     gastosData.push(runningGastos);
   });
-  if(labels.length === 0){ labels.push('Inicio'); totalData.push(0); gastosData.push(0); }
+  if(labels.length === 0){ labels.push('Sin datos'); totalData.push(0); gastosData.push(0); }
 
   const ctx = document.getElementById('progressChart').getContext('2d');
   if(chart) chart.destroy();
@@ -954,7 +997,8 @@ function renderChart(){
     borderWidth:2,
   }];
 
-  if(!isGastos){
+  const hayFiltroActivo = !!(document.getElementById('histDesde').value || document.getElementById('histHasta').value);
+  if(!isGastos && !hayFiltroActivo){
     datasets.push({
       label:'Meta',
       data: labels.map(()=> meta),
@@ -991,90 +1035,6 @@ function renderChart(){
         x:{ ticks:{ color:'#8b939b', font:{ family:'JetBrains Mono', size:10 } }, grid:{ color:'#1b1f23' } },
         y:{ ticks:{ color:'#8b939b', font:{ family:'JetBrains Mono', size:10 },
               callback: (v)=> '$' + (v/1000).toFixed(0) + 'k' },
-            grid:{ color:'#1b1f23' } }
-      }
-    }
-  });
-}
-
-/* ---- Filtro por fecha, dentro del drawer ---- */
-function initFilterDefaults(){
-  const desdeInput = document.getElementById('filterDesde');
-  const hastaInput = document.getElementById('filterHasta');
-  // Solo fija valores por defecto la primera vez que se abre (no pisa lo que el usuario ya eligió)
-  if(desdeInput.value && hastaInput.value) return;
-
-  if(entries.length === 0){
-    const hoy = new Date().toISOString().slice(0,10);
-    desdeInput.value = hoy;
-    hastaInput.value = hoy;
-    return;
-  }
-  const fechas = entries.map(e => e.fecha).sort();
-  desdeInput.value = fechas[0];
-  hastaInput.value = fechas[fechas.length - 1];
-}
-
-function renderFilterChart(){
-  const desde = document.getElementById('filterDesde').value;
-  const hasta = document.getElementById('filterHasta').value;
-  const canvas = document.getElementById('filterChart');
-  const emptyEl = document.getElementById('filterEmpty');
-  if(!canvas) return;
-
-  let filtradas = entries.slice();
-  if(desde) filtradas = filtradas.filter(e => e.fecha >= desde);
-  if(hasta) filtradas = filtradas.filter(e => e.fecha <= hasta);
-  filtradas.sort((a,b)=> a.fecha.localeCompare(b.fecha));
-
-  const fEfectivo = filtradas.reduce((s,e)=> s + e.efectivo, 0);
-  const fTarjeta = filtradas.reduce((s,e)=> s + e.tarjeta, 0);
-  const fGastos = filtradas.reduce((s,e)=> s + (e.gastos || 0), 0);
-  const fNeto = fEfectivo + fTarjeta - fGastos;
-
-  document.getElementById('filterEfectivo').textContent = fmt(fEfectivo);
-  document.getElementById('filterTarjeta').textContent = fmt(fTarjeta);
-  document.getElementById('filterGastos').textContent = fmt(fGastos);
-  document.getElementById('filterNeto').textContent = fmt(fNeto);
-
-  if(filtradas.length === 0){
-    if(filterChartInstance){ filterChartInstance.destroy(); filterChartInstance = null; }
-    canvas.style.display = 'none';
-    emptyEl.style.display = 'block';
-    return;
-  }
-  canvas.style.display = 'block';
-  emptyEl.style.display = 'none';
-
-  const labels = filtradas.map(e => formatDate(e.fecha));
-  const netoData = filtradas.map(e => e.efectivo + e.tarjeta - (e.gastos || 0));
-
-  const ctx = canvas.getContext('2d');
-  if(filterChartInstance) filterChartInstance.destroy();
-  filterChartInstance = new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        data: netoData,
-        backgroundColor: netoData.map(v => v >= 0 ? '#35d07f' : '#ff5d5d'),
-        borderRadius:4, maxBarThickness:22
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{ display:false },
-        tooltip:{
-          backgroundColor:'#1b1f23', titleColor:'#8b939b', bodyColor:'#f2f3f4',
-          borderColor:'#262b30', borderWidth:1, padding:8, displayColors:false,
-          callbacks:{ label:(ctx)=> 'Neto: ' + fmt(ctx.parsed.y) }
-        }
-      },
-      scales:{
-        x:{ ticks:{ color:'#8b939b', font:{ family:'JetBrains Mono', size:9 } }, grid:{ display:false } },
-        y:{ ticks:{ color:'#8b939b', font:{ family:'JetBrains Mono', size:9 },
-              callback:(v)=> '$' + (v/1000).toFixed(0) + 'k' },
             grid:{ color:'#1b1f23' } }
       }
     }
