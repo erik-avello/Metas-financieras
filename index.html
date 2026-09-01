@@ -33,13 +33,30 @@
     --red: #ff5d5d;
     --radius: 18px;
   }
+  html[data-theme="light"]{
+    --bg: #f5f6f7;
+    --panel: #ffffff;
+    --panel-2: #f0f1f3;
+    --hairline: #e2e4e7;
+    --text: #16181a;
+    --text-dim: #6b7280;
+    --green: #1fa971;
+    --green-dim: #d4f3e4;
+    --orange: #d97a1f;
+    --orange-dim: #fbe3c8;
+    --blue: #2f7fe0;
+    --red: #d9453f;
+  }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);}
+  html{ transition: background 0.25s ease; }
   body{
     font-family:'Space Grotesk', system-ui, sans-serif;
     min-height:100vh;
     padding: 20px 16px 60px;
     display:flex; justify-content:center;
+    background:var(--bg); color:var(--text);
+    transition: background 0.25s ease, color 0.25s ease;
   }
   .app{ width:100%; max-width:520px; }
   .mono{ font-family:'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
@@ -51,8 +68,14 @@
     color:var(--text-dim); margin:0 0 6px;
   }
   h1{ margin:0; font-size:26px; font-weight:700; letter-spacing:-0.02em; }
+  .meta-edit-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; }
+  .theme-btn{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
+    width:36px; height:36px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:15px;
+  }
   .meta-edit{
-    margin-top:10px; display:flex; align-items:center; gap:8px;
+    display:flex; align-items:center; gap:8px;
     font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--text-dim);
   }
   .meta-edit input{
@@ -238,18 +261,135 @@
   .restore-msg{ font-size:12px; margin-top:8px; }
   .restore-msg.ok{ color:var(--green); }
   .restore-msg.err{ color:var(--red); }
+
+  /* ---- Header + hamburger ---- */
+  .header-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .hamburger-btn{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:12px;
+    width:42px; height:42px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--text); font-size:18px; position:relative;
+  }
+  .hamburger-btn .dot-badge{
+    position:absolute; top:6px; right:6px; width:7px; height:7px; border-radius:50%;
+    background:var(--orange); display:none;
+  }
+  .hamburger-btn .dot-badge.show{ display:block; }
+
+  /* ---- Drawer / slide menu ---- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:40;
+    opacity:0; pointer-events:none; transition:opacity 0.25s;
+  }
+  .overlay.open{ opacity:1; pointer-events:auto; }
+  .drawer{
+    position:fixed; top:0; left:0; bottom:0; width:86%; max-width:340px;
+    background:var(--bg); border-right:1px solid var(--hairline); z-index:50;
+    transform:translateX(-100%); transition:transform 0.28s cubic-bezier(.2,.8,.2,1);
+    overflow-y:auto; padding:18px 16px 40px;
+  }
+  .drawer.open{ transform:translateX(0); }
+  .drawer-header{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;
+  }
+  .drawer-header h2{ margin:0; font-size:18px; font-weight:700; }
+  .drawer-close{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
+    width:32px; height:32px; color:var(--text); font-size:15px; cursor:pointer;
+  }
+  .drawer-section-title{
+    font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim);
+    margin:20px 2px 10px; font-family:'JetBrains Mono',monospace;
+  }
+  .drawer-section-title:first-of-type{ margin-top:0; }
+
+  .filter-panel{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
+    padding:16px;
+  }
+  .filter-dates{ display:flex; gap:10px; margin-bottom:14px; }
+  .filter-field{ flex:1; }
+  .filter-field label{ display:block; font-size:11px; color:var(--text-dim); margin-bottom:5px; font-family:'JetBrains Mono',monospace; }
+  .filter-field input{
+    width:100%; background:var(--panel-2); border:1px solid var(--hairline);
+    border-radius:9px; padding:8px 8px; color:var(--text); font-size:13px;
+    font-family:'JetBrains Mono',monospace; outline:none;
+  }
+  .filter-field input:focus{ border-color:var(--blue); }
+  .filter-stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .filter-stat{
+    background:var(--panel-2); border:1px solid var(--hairline); border-radius:10px;
+    padding:9px 10px; display:flex; flex-direction:column; gap:3px;
+  }
+  .fs-label{ font-size:10.5px; color:var(--text-dim); }
+  .fs-value{ font-size:14px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+  .fs-value.cash{ color:var(--green); }
+  .fs-value.card{ color:var(--blue); }
+  .fs-value.expense{ color:var(--red); }
+  .fs-value.neto{ color:var(--text); }
+  .filter-chart-wrap{ height:130px; }
+  .filter-empty{ font-size:12px; color:var(--text-dim); text-align:center; padding:16px 0; }
+
+  /* ---- Chart toggle ---- */
+  .chart-toggle{ display:flex; gap:8px; margin-bottom:10px; }
+  .chart-toggle button{
+    flex:1; background:var(--panel-2); border:1px solid var(--hairline); color:var(--text-dim);
+    border-radius:9px; padding:8px; font-size:12.5px; font-weight:600; cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;
+  }
+  .chart-toggle button.active{ background:var(--green); color:#04180d; border-color:var(--green); }
+  .chart-toggle button.active.gastos-active{ background:var(--red); color:#450f0f; border-color:var(--red); }
+
+  /* ---- History: capped list + modal ---- */
+  .ver-todo-btn{
+    width:100%; background:var(--panel); border:1px solid var(--hairline); color:var(--text);
+    border-radius:12px; padding:11px; font-size:13px; font-weight:600; cursor:pointer;
+    margin-top:8px; font-family:'Space Grotesk',sans-serif;
+  }
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:60;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-sheet{
+    background:var(--bg); border:1px solid var(--hairline); border-top-left-radius:22px; border-top-right-radius:22px;
+    width:100%; max-width:520px; max-height:80vh; display:flex; flex-direction:column;
+    padding:16px 16px 24px;
+  }
+  .modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .modal-header h2{ margin:0; font-size:16px; font-weight:700; }
+  .modal-body{ overflow-y:auto; }
+
+  /* ---- Export / share ---- */
+  .export-btn{
+    width:100%; background:var(--panel); border:1px solid var(--hairline); color:var(--text);
+    border-radius:12px; padding:12px; font-size:13.5px; font-weight:600; cursor:pointer;
+    margin-top:10px; display:flex; align-items:center; justify-content:center; gap:8px;
+    font-family:'Space Grotesk',sans-serif;
+  }
+  .export-msg{ font-size:12px; color:var(--text-dim); margin-top:8px; text-align:center; }
 </style>
 </head>
 <body>
 <div class="app">
 
   <header>
-    <p class="eyebrow">Meta de ahorro &mdash; App</p>
-    <h1 id="titleGoal">Rumbo a la meta</h1>
-    <div class="meta-edit">
-      Meta total: $
-      <input type="number" inputmode="numeric" pattern="[0-9]*" id="metaInput" class="mono" value="0">
-      <span style="color:var(--text-dim);">CLP</span>
+    <div class="header-row">
+      <div>
+        <p class="eyebrow">Meta de ahorro &mdash; App</p>
+        <h1 id="titleGoal">Rumbo a la meta</h1>
+      </div>
+      <button class="hamburger-btn" id="menuBtn" aria-label="Abrir menú">
+        ☰
+        <span class="dot-badge" id="menuBadge"></span>
+      </button>
+    </div>
+    <div class="meta-edit-row">
+      <div class="meta-edit">
+        Meta total: $
+        <input type="number" inputmode="numeric" pattern="[0-9]*" id="metaInput" class="mono" value="0">
+        <span style="color:var(--text-dim);">CLP</span>
+      </div>
+      <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema">🌙</button>
     </div>
   </header>
 
@@ -304,6 +444,10 @@
   </div>
 
   <div class="section-title">Progreso acumulado</div>
+  <div class="chart-toggle">
+    <button id="chartToggleTotal" class="active">Total</button>
+    <button id="chartToggleGastos">Gastos</button>
+  </div>
   <div class="chart-card">
     <canvas id="progressChart"></canvas>
   </div>
@@ -337,8 +481,46 @@
 
   <div class="section-title">Historial</div>
   <div class="list" id="entriesList"></div>
+  <button class="ver-todo-btn" id="verTodoBtn" style="display:none;">Ver historial completo</button>
 
-  <div class="section-title">Respaldo en la nube</div>
+  <button class="export-btn" id="exportBtn">📤 Exportar / Compartir Excel</button>
+  <div class="export-msg" id="exportMsg"></div>
+
+  <div class="footer-note">Tus datos se guardan en este celular y respaldados en la nube con tu código privado.</div>
+</div>
+
+<div class="overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h2>Menú</h2>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+
+  <div class="drawer-section-title">Filtrar por fecha</div>
+  <div class="filter-panel">
+    <div class="filter-dates">
+      <div class="filter-field">
+        <label>Desde</label>
+        <input type="date" id="filterDesde">
+      </div>
+      <div class="filter-field">
+        <label>Hasta</label>
+        <input type="date" id="filterHasta">
+      </div>
+    </div>
+    <div class="filter-stats">
+      <div class="filter-stat"><span class="fs-label">Efectivo</span><span class="fs-value cash" id="filterEfectivo">$0</span></div>
+      <div class="filter-stat"><span class="fs-label">Tarjeta</span><span class="fs-value card" id="filterTarjeta">$0</span></div>
+      <div class="filter-stat"><span class="fs-label">Gastos</span><span class="fs-value expense" id="filterGastos">$0</span></div>
+      <div class="filter-stat"><span class="fs-label">Neto del rango</span><span class="fs-value neto" id="filterNeto">$0</span></div>
+    </div>
+    <div class="filter-chart-wrap">
+      <canvas id="filterChart"></canvas>
+    </div>
+    <div class="filter-empty" id="filterEmpty" style="display:none;">No hay registros en ese rango de fechas.</div>
+  </div>
+
+  <div class="drawer-section-title">Respaldo en la nube</div>
   <div class="cloud-card">
     <div class="cloud-row">
       <div class="cloud-dot" id="cloudDot"></div>
@@ -355,10 +537,21 @@
     </div>
     <div class="restore-msg" id="restoreMsg"></div>
   </div>
-
-  <div class="footer-note">Tus datos se guardan en este celular y respaldados en la nube con tu código privado.</div>
 </div>
 
+<div class="modal-overlay" id="historyModalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2>Historial completo</h2>
+      <button class="drawer-close" id="historyModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="list" id="entriesListFull"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* ---- Firebase ---- */
 const firebaseConfig = {
@@ -439,11 +632,26 @@ document.getElementById('restoreBtn').addEventListener('click', async ()=>{
   const code = document.getElementById('restoreInput').value.trim();
   const msg = document.getElementById('restoreMsg');
   if(!code){ return; }
+
+  // Validación de formato: evita enviar consultas con datos basura o excesivamente largos
+  if(!/^[a-zA-Z0-9-]{10,80}$/.test(code)){
+    msg.className = 'restore-msg err';
+    msg.textContent = 'Ese código no tiene un formato válido. Revísalo e intenta de nuevo.';
+    return;
+  }
+
   if(!firebaseReady){
     msg.className = 'restore-msg err';
     msg.textContent = 'Sin conexión con la nube en este momento. Intenta más tarde.';
     return;
   }
+
+  // Si ya hay datos cargados, confirmar antes de sobrescribirlos
+  if((entries.length > 0 || meta > 0) && code !== myCode){
+    const confirmado = window.confirm('Esto reemplazará tu meta e historial actuales con los datos de ese código. ¿Quieres continuar?');
+    if(!confirmado) return;
+  }
+
   msg.className = 'restore-msg';
   msg.textContent = 'Buscando...';
   try{
@@ -467,6 +675,11 @@ document.getElementById('restoreBtn').addEventListener('click', async ()=>{
     document.getElementById('restoreInput').value = '';
     setCloudStatus('ok', 'Respaldado en la nube ✓');
     render();
+    // Los datos cambiaron por completo: reseteamos el rango de fechas del filtro
+    document.getElementById('filterDesde').value = '';
+    document.getElementById('filterHasta').value = '';
+    initFilterDefaults();
+    renderFilterChart();
   }catch(e){
     console.error(e);
     msg.className = 'restore-msg err';
@@ -478,8 +691,87 @@ document.getElementById('restoreBtn').addEventListener('click', async ()=>{
 let meta = 0;
 let entries = [];
 let chart = null;
+let filterChartInstance = null;
+let chartMode = 'total'; // 'total' | 'gastos'
 
 const fmt = (n) => '$' + Math.round(n).toLocaleString('es-CL');
+
+/* Escapa texto antes de insertarlo en HTML, por seguridad ante datos inesperados */
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/* ---- Tema claro/oscuro ---- */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+let currentTheme = localStorage.getItem('meta_uber_theme') || 'dark';
+applyTheme(currentTheme);
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  localStorage.setItem('meta_uber_theme', currentTheme);
+  applyTheme(currentTheme);
+  // Los gráficos usan colores fijos legibles en ambos temas, no requieren redibujarse.
+});
+
+/* ---- Menú deslizante (drawer) ---- */
+const drawer = document.getElementById('drawer');
+const drawerOverlay = document.getElementById('drawerOverlay');
+function openDrawer(){
+  drawer.classList.add('open');
+  drawerOverlay.classList.add('open');
+  initFilterDefaults();
+  renderFilterChart();
+}
+function closeDrawer(){
+  drawer.classList.remove('open');
+  drawerOverlay.classList.remove('open');
+}
+document.getElementById('menuBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+drawerOverlay.addEventListener('click', closeDrawer);
+
+/* ---- Filtro por fecha (dentro del drawer) ---- */
+document.getElementById('filterDesde').addEventListener('change', renderFilterChart);
+document.getElementById('filterHasta').addEventListener('change', renderFilterChart);
+
+/* ---- Toggle del gráfico principal: Total vs Gastos ---- */
+const chartToggleTotal = document.getElementById('chartToggleTotal');
+const chartToggleGastos = document.getElementById('chartToggleGastos');
+chartToggleTotal.addEventListener('click', ()=>{
+  chartMode = 'total';
+  chartToggleTotal.classList.add('active');
+  chartToggleTotal.classList.remove('gastos-active');
+  chartToggleGastos.classList.remove('active');
+  renderChart();
+});
+chartToggleGastos.addEventListener('click', ()=>{
+  chartMode = 'gastos';
+  chartToggleGastos.classList.add('active');
+  chartToggleGastos.classList.add('gastos-active');
+  chartToggleTotal.classList.remove('active');
+  renderChart();
+});
+
+/* ---- Historial: modal con la lista completa ---- */
+const historyModalOverlay = document.getElementById('historyModalOverlay');
+document.getElementById('verTodoBtn').addEventListener('click', ()=>{
+  renderHistoryFull();
+  historyModalOverlay.classList.add('open');
+});
+document.getElementById('historyModalClose').addEventListener('click', ()=>{
+  historyModalOverlay.classList.remove('open');
+});
+historyModalOverlay.addEventListener('click', (e)=>{
+  if(e.target === historyModalOverlay) historyModalOverlay.classList.remove('open');
+});
 
 async function loadData(){
   try{
@@ -556,6 +848,32 @@ function deleteEntry(id){
   entries = entries.filter(e => e.id !== id);
   saveEntries();
   render();
+  if(document.getElementById('historyModalOverlay').classList.contains('open')){
+    renderHistoryFull();
+  }
+}
+
+function buildEntryRow(e){
+  return `
+    <div class="item">
+      <div class="date">${escapeHtml(formatDate(e.fecha))}</div>
+      <div class="amounts">
+        <span class="cash">+${fmt(e.efectivo)}</span>
+        <span class="card">+${fmt(e.tarjeta)}</span>
+        ${e.gastos ? `<span class="expense">-${fmt(e.gastos)}</span>` : ''}
+      </div>
+      <button class="del" onclick="deleteEntry('${escapeHtml(e.id)}')">✕</button>
+    </div>
+  `;
+}
+
+function renderHistoryFull(){
+  const listEl = document.getElementById('entriesListFull');
+  if(entries.length === 0){
+    listEl.innerHTML = '<div class="empty">Aún no hay registros.</div>';
+    return;
+  }
+  listEl.innerHTML = entries.slice().reverse().map(buildEntryRow).join('');
 }
 
 function render(){
@@ -574,24 +892,24 @@ function render(){
   document.getElementById('roadFill').style.width = pct + '%';
   document.getElementById('carIcon').style.left = 'calc(' + pct + '% )';
 
+  const HISTORY_LIMIT = 5;
   const listEl = document.getElementById('entriesList');
+  const verTodoBtn = document.getElementById('verTodoBtn');
   if(entries.length === 0){
     listEl.innerHTML = '<div class="empty">Aún no hay registros. Agrega tu primer avance arriba.</div>';
+    verTodoBtn.style.display = 'none';
   } else {
-    listEl.innerHTML = entries.slice().reverse().map(e => `
-      <div class="item">
-        <div class="date">${formatDate(e.fecha)}</div>
-        <div class="amounts">
-          <span class="cash">+${fmt(e.efectivo)}</span>
-          <span class="card">+${fmt(e.tarjeta)}</span>
-          ${e.gastos ? `<span class="expense">-${fmt(e.gastos)}</span>` : ''}
-        </div>
-        <button class="del" onclick="deleteEntry('${e.id}')">✕</button>
-      </div>
-    `).join('');
+    const reversed = entries.slice().reverse();
+    listEl.innerHTML = reversed.slice(0, HISTORY_LIMIT).map(buildEntryRow).join('');
+    if(entries.length > HISTORY_LIMIT){
+      verTodoBtn.style.display = 'block';
+      verTodoBtn.textContent = `Ver historial completo (${entries.length})`;
+    } else {
+      verTodoBtn.style.display = 'none';
+    }
   }
 
-  renderChart(total);
+  renderChart();
 }
 
 function formatDate(iso){
@@ -599,47 +917,76 @@ function formatDate(iso){
   return d.toLocaleDateString('es-CL', { day:'2-digit', month:'short' });
 }
 
-function renderChart(currentTotal){
+function renderChart(){
   const sorted = entries.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha));
-  let running = 0;
   const labels = [];
-  const data = [];
+  const totalData = [];
+  const gastosData = [];
+  let runningTotal = 0;
+  let runningGastos = 0;
   sorted.forEach(e => {
-    running += e.efectivo + e.tarjeta - (e.gastos || 0);
-    if(running < 0) running = 0;
+    runningTotal += e.efectivo + e.tarjeta - (e.gastos || 0);
+    if(runningTotal < 0) runningTotal = 0;
+    runningGastos += (e.gastos || 0);
     labels.push(formatDate(e.fecha));
-    data.push(running);
+    totalData.push(runningTotal);
+    gastosData.push(runningGastos);
   });
-  if(labels.length === 0){ labels.push('Inicio'); data.push(0); }
+  if(labels.length === 0){ labels.push('Inicio'); totalData.push(0); gastosData.push(0); }
 
   const ctx = document.getElementById('progressChart').getContext('2d');
   if(chart) chart.destroy();
+
+  const isGastos = chartMode === 'gastos';
+  const mainColor = isGastos ? '#ff5d5d' : '#35d07f';
+  const mainBg = isGastos ? 'rgba(255,93,93,0.12)' : 'rgba(53,208,127,0.12)';
+
+  const datasets = [{
+    label: isGastos ? 'Gastos acumulados' : 'Progreso acumulado',
+    data: isGastos ? gastosData : totalData,
+    borderColor: mainColor,
+    backgroundColor: mainBg,
+    fill:true,
+    tension:0.35,
+    pointRadius:3,
+    pointHoverRadius:6,
+    pointBackgroundColor: mainColor,
+    borderWidth:2,
+  }];
+
+  if(!isGastos){
+    datasets.push({
+      label:'Meta',
+      data: labels.map(()=> meta),
+      borderColor:'#ff9d3d',
+      borderDash:[6,6],
+      borderWidth:1.5,
+      pointRadius:0,
+      fill:false,
+    });
+  }
+
   chart = new Chart(ctx, {
     type:'line',
-    data:{
-      labels: labels,
-      datasets:[{
-        data: data,
-        borderColor:'#35d07f',
-        backgroundColor:'rgba(53,208,127,0.12)',
-        fill:true,
-        tension:0.35,
-        pointRadius:3,
-        pointBackgroundColor:'#35d07f',
-        borderWidth:2,
-      },
-      {
-        data: labels.map(()=> meta),
-        borderColor:'#ff9d3d',
-        borderDash:[6,6],
-        borderWidth:1.5,
-        pointRadius:0,
-        fill:false,
-      }]
-    },
+    data:{ labels, datasets },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false } },
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{
+          backgroundColor:'#1b1f23',
+          titleColor:'#8b939b',
+          bodyColor:'#f2f3f4',
+          borderColor:'#262b30',
+          borderWidth:1,
+          padding:10,
+          displayColors:false,
+          callbacks:{
+            label:(ctx)=> (isGastos ? 'Gastos: ' : 'Total: ') + fmt(ctx.parsed.y)
+          }
+        }
+      },
       scales:{
         x:{ ticks:{ color:'#8b939b', font:{ family:'JetBrains Mono', size:10 } }, grid:{ color:'#1b1f23' } },
         y:{ ticks:{ color:'#8b939b', font:{ family:'JetBrains Mono', size:10 },
@@ -649,6 +996,157 @@ function renderChart(currentTotal){
     }
   });
 }
+
+/* ---- Filtro por fecha, dentro del drawer ---- */
+function initFilterDefaults(){
+  const desdeInput = document.getElementById('filterDesde');
+  const hastaInput = document.getElementById('filterHasta');
+  // Solo fija valores por defecto la primera vez que se abre (no pisa lo que el usuario ya eligió)
+  if(desdeInput.value && hastaInput.value) return;
+
+  if(entries.length === 0){
+    const hoy = new Date().toISOString().slice(0,10);
+    desdeInput.value = hoy;
+    hastaInput.value = hoy;
+    return;
+  }
+  const fechas = entries.map(e => e.fecha).sort();
+  desdeInput.value = fechas[0];
+  hastaInput.value = fechas[fechas.length - 1];
+}
+
+function renderFilterChart(){
+  const desde = document.getElementById('filterDesde').value;
+  const hasta = document.getElementById('filterHasta').value;
+  const canvas = document.getElementById('filterChart');
+  const emptyEl = document.getElementById('filterEmpty');
+  if(!canvas) return;
+
+  let filtradas = entries.slice();
+  if(desde) filtradas = filtradas.filter(e => e.fecha >= desde);
+  if(hasta) filtradas = filtradas.filter(e => e.fecha <= hasta);
+  filtradas.sort((a,b)=> a.fecha.localeCompare(b.fecha));
+
+  const fEfectivo = filtradas.reduce((s,e)=> s + e.efectivo, 0);
+  const fTarjeta = filtradas.reduce((s,e)=> s + e.tarjeta, 0);
+  const fGastos = filtradas.reduce((s,e)=> s + (e.gastos || 0), 0);
+  const fNeto = fEfectivo + fTarjeta - fGastos;
+
+  document.getElementById('filterEfectivo').textContent = fmt(fEfectivo);
+  document.getElementById('filterTarjeta').textContent = fmt(fTarjeta);
+  document.getElementById('filterGastos').textContent = fmt(fGastos);
+  document.getElementById('filterNeto').textContent = fmt(fNeto);
+
+  if(filtradas.length === 0){
+    if(filterChartInstance){ filterChartInstance.destroy(); filterChartInstance = null; }
+    canvas.style.display = 'none';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  canvas.style.display = 'block';
+  emptyEl.style.display = 'none';
+
+  const labels = filtradas.map(e => formatDate(e.fecha));
+  const netoData = filtradas.map(e => e.efectivo + e.tarjeta - (e.gastos || 0));
+
+  const ctx = canvas.getContext('2d');
+  if(filterChartInstance) filterChartInstance.destroy();
+  filterChartInstance = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        data: netoData,
+        backgroundColor: netoData.map(v => v >= 0 ? '#35d07f' : '#ff5d5d'),
+        borderRadius:4, maxBarThickness:22
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ display:false },
+        tooltip:{
+          backgroundColor:'#1b1f23', titleColor:'#8b939b', bodyColor:'#f2f3f4',
+          borderColor:'#262b30', borderWidth:1, padding:8, displayColors:false,
+          callbacks:{ label:(ctx)=> 'Neto: ' + fmt(ctx.parsed.y) }
+        }
+      },
+      scales:{
+        x:{ ticks:{ color:'#8b939b', font:{ family:'JetBrains Mono', size:9 } }, grid:{ display:false } },
+        y:{ ticks:{ color:'#8b939b', font:{ family:'JetBrains Mono', size:9 },
+              callback:(v)=> '$' + (v/1000).toFixed(0) + 'k' },
+            grid:{ color:'#1b1f23' } }
+      }
+    }
+  });
+}
+
+/* ---- Exportar a Excel y compartir (WhatsApp, Correo, etc.) ---- */
+function construirLibroExcel(){
+  const filas = entries.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha)).map(e => ({
+    Fecha: e.fecha,
+    Efectivo: e.efectivo,
+    Tarjeta: e.tarjeta,
+    Gastos: e.gastos || 0,
+    'Neto del día': e.efectivo + e.tarjeta - (e.gastos || 0)
+  }));
+  const hoja = XLSX.utils.json_to_sheet(filas);
+  hoja['!cols'] = [{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, hoja, 'Historial');
+  return libro;
+}
+
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  const msgEl = document.getElementById('exportMsg');
+  if(typeof XLSX === 'undefined'){
+    msgEl.textContent = 'No se pudo cargar el generador de Excel. Revisa tu conexión.';
+    return;
+  }
+  if(entries.length === 0){
+    msgEl.textContent = 'Aún no tienes registros para exportar.';
+    return;
+  }
+
+  try{
+    const libro = construirLibroExcel();
+    const fechaHoy = new Date().toISOString().slice(0,10);
+    const nombreArchivo = `meta_ahorro_${fechaHoy}.xlsx`;
+    const arrayBuffer = XLSX.write(libro, { bookType:'xlsx', type:'array' });
+    const blob = new Blob([arrayBuffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const archivo = new File([blob], nombreArchivo, { type: blob.type });
+
+    // En celular: intenta abrir el menú nativo de compartir (WhatsApp, Correo, etc.)
+    if(navigator.canShare && navigator.canShare({ files:[archivo] })){
+      try{
+        await navigator.share({
+          files:[archivo],
+          title:'Mi historial de ahorro',
+          text:'Historial exportado desde la app de meta de ahorro.'
+        });
+        msgEl.textContent = '';
+        return;
+      }catch(shareErr){
+        // Si el usuario cancela el share, no es un error real — no mostramos nada.
+        if(shareErr && shareErr.name === 'AbortError'){ return; }
+      }
+    }
+
+    // Respaldo: descarga normal del archivo
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    msgEl.textContent = 'Descargado. Puedes adjuntarlo manualmente en WhatsApp o tu correo.';
+  }catch(e){
+    console.error('Error al exportar', e);
+    msgEl.textContent = 'Ocurrió un error al generar el archivo. Intenta de nuevo.';
+  }
+});
 
 loadData();
 
