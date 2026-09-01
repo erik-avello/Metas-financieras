@@ -61,7 +61,12 @@
   .app{ width:100%; max-width:520px; }
   .mono{ font-family:'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
 
-  header{ margin-bottom:22px; }
+  header{ margin-bottom:22px; transition: margin 0.25s ease; }
+  header.compact{ margin-bottom:10px; }
+  header.compact h1{ font-size:19px; }
+  header.compact .eyebrow{ opacity:0; max-height:0; margin:0; overflow:hidden; }
+  header h1{ transition: font-size 0.25s ease; }
+  .eyebrow{ transition: opacity 0.2s ease, max-height 0.2s ease; }
   .eyebrow{
     font-family:'JetBrains Mono', monospace;
     font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
@@ -137,9 +142,15 @@
   }
   .road-fill{
     position:absolute; top:0; left:0; height:100%;
-    background: linear-gradient(90deg, var(--green-dim), var(--green));
+    background: linear-gradient(90deg, var(--green-dim), var(--green), var(--green-dim), var(--green));
+    background-size: 300% 100%;
+    animation: roadShimmer 4s linear infinite;
     border-radius:4px;
     transition: width 0.6s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes roadShimmer{
+    0%{ background-position: 0% 0%; }
+    100%{ background-position: 100% 0%; }
   }
   .road-dashes{
     position:absolute; top:50%; left:0; right:0; height:2px; transform:translateY(-50%);
@@ -147,13 +158,14 @@
     opacity:0.25; mix-blend-mode:overlay;
   }
   .car{
-    position:absolute; top:50%; transform:translate(-50%,-58%);
-    font-size:22px; transition: left 0.6s cubic-bezier(.2,.8,.2,1);
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    display:flex; align-items:center; justify-content:center;
+    transition: left 0.6s cubic-bezier(.2,.8,.2,1);
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
   }
   .flag{
-    position:absolute; right:-2px; top:50%; transform:translate(0,-72%);
-    font-size:20px;
+    position:absolute; right:-2px; top:50%; transform:translate(0,-50%);
+    display:flex; align-items:center; justify-content:center;
   }
   .road-pct{
     display:flex; justify-content:space-between; align-items:baseline;
@@ -182,7 +194,25 @@
   .chart-card{
     background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
     padding:16px 14px 8px; margin-bottom:16px; height:200px;
+    position:relative;
   }
+
+  /* ---- Skeleton loaders ---- */
+  .skeleton{
+    background: linear-gradient(90deg, var(--panel-2) 25%, var(--hairline) 50%, var(--panel-2) 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.4s ease-in-out infinite;
+    border-radius:8px;
+  }
+  @keyframes skeletonShimmer{
+    0%{ background-position: 200% 0; }
+    100%{ background-position: -200% 0; }
+  }
+  .chart-skeleton{
+    position:absolute; inset:16px 14px 8px; border-radius:12px;
+  }
+  .cloud-skeleton-dot{ width:8px; height:8px; border-radius:50%; }
+  .cloud-skeleton-text{ height:12px; width:140px; }
 
   form.entry{
     background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
@@ -217,11 +247,28 @@
   .item .amounts .cash{ color:var(--green); }
   .item .amounts .card{ color:var(--blue); }
   .item .amounts .expense{ color:var(--red); }
+  .item-actions{ display:flex; align-items:center; gap:2px; }
+  .item .edit{
+    background:none; border:none; color:var(--text-dim); cursor:pointer;
+    padding:6px; line-height:1; display:flex; align-items:center; justify-content:center;
+    border-radius:8px;
+  }
+  .item .edit:active{ color:var(--blue); background:var(--panel-2); }
   .item .del{
     background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer;
     padding:4px 6px; line-height:1;
   }
   .item .del:active{ color:var(--orange); }
+
+  .editing-banner{
+    display:none; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--panel-2); border:1px solid var(--blue); border-radius:12px;
+    padding:10px 14px; margin-bottom:8px; font-size:13px; color:var(--text);
+  }
+  .editing-banner.show{ display:flex; }
+  .editing-banner button{
+    background:none; border:none; color:var(--blue); font-weight:700; font-size:13px; cursor:pointer;
+  }
 
   .empty{
     text-align:center; color:var(--text-dim); font-size:13px; padding:30px 10px;
@@ -302,6 +349,27 @@
   }
   .drawer-section-title:first-of-type{ margin-top:0; }
 
+  .reminder-panel{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
+    padding:14px 16px;
+  }
+  .reminder-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .reminder-text{ display:flex; flex-direction:column; gap:2px; }
+  .reminder-text strong{ font-size:13px; }
+  .reminder-text span{ font-size:11.5px; color:var(--text-dim); }
+  .reminder-toggle{
+    position:relative; width:44px; height:26px; border-radius:14px; flex-shrink:0;
+    background:var(--panel-2); border:1px solid var(--hairline); cursor:pointer;
+    transition: background 0.2s ease;
+  }
+  .reminder-toggle::after{
+    content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%;
+    background:var(--text-dim); transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .reminder-toggle.on{ background:var(--green-dim); border-color:var(--green); }
+  .reminder-toggle.on::after{ transform:translateX(18px); background:var(--green); }
+  .reminder-hint{ font-size:10.5px; color:var(--text-dim); margin-top:10px; line-height:1.5; }
+
   .filter-panel{
     background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
     padding:16px;
@@ -375,10 +443,25 @@
     font-family:'Space Grotesk',sans-serif;
   }
   .export-msg{ font-size:12px; color:var(--text-dim); margin-top:8px; text-align:center; }
+
+  /* ---- Confeti al llegar al 100% ---- */
+  .confetti-container{
+    position:fixed; inset:0; pointer-events:none; z-index:70; overflow:hidden;
+  }
+  .confetti-piece{
+    position:absolute; top:-20px; width:8px; height:14px; opacity:0.9;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform: translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform: translateY(110vh) rotate(540deg); opacity:0.7; }
+  }
 </style>
 </head>
 <body>
 <div class="app">
+<div class="confetti-container" id="confettiContainer"></div>
+
 
   <header>
     <div class="header-row">
@@ -387,7 +470,7 @@
         <h1 id="titleGoal">Rumbo a la meta</h1>
       </div>
       <button class="hamburger-btn" id="menuBtn" aria-label="Abrir menú">
-        ☰
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         <span class="dot-badge" id="menuBadge"></span>
       </button>
     </div>
@@ -397,7 +480,7 @@
         <input type="number" inputmode="numeric" pattern="[0-9]*" id="metaInput" class="mono" value="0">
         <span style="color:var(--text-dim);">CLP</span>
       </div>
-      <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema">🌙</button>
+      <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     </div>
   </header>
 
@@ -413,7 +496,7 @@
   <div class="ios-guide" id="iosGuide" style="display:none;">
     <div class="ios-guide-row"><span class="step">1</span> Toca el ícono <strong>Compartir</strong> <span class="share-icon">⬆️</span> en Safari</div>
     <div class="ios-guide-row"><span class="step">2</span> Elige <strong>"Agregar a pantalla de inicio"</strong></div>
-    <div class="ios-guide-row"><span class="step">3</span> Toca <strong>"Agregar"</strong> — listo, quedará como app 🚗</div>
+    <div class="ios-guide-row"><span class="step">3</span> Toca <strong>"Agregar"</strong> — listo, quedará como app</div>
     <button class="install-close" id="iosGuideClose">Entendido</button>
   </div>
 
@@ -424,8 +507,12 @@
         <div class="road-fill" id="roadFill" style="width:0%"></div>
       </div>
       <div class="road-dashes"></div>
-      <div class="car" id="carIcon" style="left:0%">🚗</div>
-      <div class="flag">🏁</div>
+      <div class="car" id="carIcon" style="left:0%">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--green)" stroke="var(--bg)" stroke-width="1.5"><circle cx="12" cy="12" r="8"/></svg>
+      </div>
+      <div class="flag">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4"/><path d="M4 4h13l-2.5 4.5L17 13H4"/></svg>
+      </div>
     </div>
     <div class="road-pct">
       <div>
@@ -457,10 +544,18 @@
     <button id="chartToggleGastos">Gastos</button>
   </div>
   <div class="chart-card">
+    <div class="skeleton chart-skeleton" id="chartSkeleton"></div>
     <canvas id="progressChart"></canvas>
   </div>
 
-  <div class="section-title">Registrar avance de hoy</div>
+  <div class="section-title" id="formSectionTitle">Registrar avance de hoy</div>
+  <div class="editing-banner" id="editingBanner">
+    <span style="display:flex; align-items:center; gap:6px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Editando un registro existente
+    </span>
+    <button type="button" id="cancelEditBtn">Cancelar</button>
+  </div>
   <form class="entry" id="entryForm">
     <div class="entry-row">
       <div class="field">
@@ -484,7 +579,7 @@
         <input type="number" inputmode="numeric" pattern="[0-9]*" id="gastos" placeholder="0" min="0">
       </div>
     </div>
-    <button type="submit" class="add">Agregar avance</button>
+    <button type="submit" class="add" id="submitBtn">Agregar avance</button>
   </form>
 
   <div class="section-title">Historial</div>
@@ -510,7 +605,10 @@
   <div class="list" id="entriesList"></div>
   <button class="ver-todo-btn" id="verTodoBtn" style="display:none;">Ver historial completo</button>
 
-  <button class="export-btn" id="exportBtn">📤 Exportar / Compartir Excel</button>
+  <button class="export-btn" id="exportBtn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    Exportar / Compartir Excel
+  </button>
   <div class="export-msg" id="exportMsg"></div>
 
   <div class="footer-note">Tus datos se guardan en este celular y respaldados en la nube con tu código privado.</div>
@@ -523,11 +621,23 @@
     <button class="drawer-close" id="drawerClose">✕</button>
   </div>
 
+  <div class="drawer-section-title">Recordatorio diario</div>
+  <div class="reminder-panel">
+    <div class="reminder-row">
+      <div class="reminder-text">
+        <strong>Aviso para registrar tu avance</strong>
+        <span id="reminderSub">Te avisa si abres la app y aún no registras nada hoy.</span>
+      </div>
+      <button class="reminder-toggle" id="reminderToggle" aria-label="Activar recordatorio"></button>
+    </div>
+    <div class="reminder-hint">Funciona mientras tengas la app abierta o la abras durante el día — los navegadores no permiten avisos en segundo plano sin instalar la app como PWA.</div>
+  </div>
+
   <div class="drawer-section-title">Respaldo en la nube</div>
   <div class="cloud-card">
     <div class="cloud-row">
-      <div class="cloud-dot" id="cloudDot"></div>
-      <span class="cloud-status" id="cloudStatus">Conectando...</span>
+      <div class="cloud-dot skeleton cloud-skeleton-dot" id="cloudDot"></div>
+      <span class="cloud-status skeleton cloud-skeleton-text" id="cloudStatus">&nbsp;</span>
     </div>
     <div class="code-box">
       <span id="codeDisplay">generando código...</span>
@@ -605,7 +715,9 @@ document.getElementById('copyCodeBtn').addEventListener('click', ()=>{
 function setCloudStatus(state, text){
   const dot = document.getElementById('cloudDot');
   dot.className = 'cloud-dot' + (state === 'ok' ? ' ok' : state === 'pending' ? ' pending' : '');
-  document.getElementById('cloudStatus').textContent = text;
+  const statusEl = document.getElementById('cloudStatus');
+  statusEl.className = 'cloud-status';
+  statusEl.textContent = text;
 }
 
 let syncTimer = null;
@@ -706,11 +818,46 @@ function escapeHtml(str){
     .replace(/'/g, '&#039;');
 }
 
+/* ---- Confeti al cumplir la meta ---- */
+function lanzarConfeti(){
+  const container = document.getElementById('confettiContainer');
+  if(!container) return;
+  const colores = ['#35d07f', '#ff9d3d', '#4da3ff', '#ff5d5d', '#f2f3f4'];
+  const cantidad = 60;
+  for(let i = 0; i < cantidad; i++){
+    const pieza = document.createElement('div');
+    pieza.className = 'confetti-piece';
+    pieza.style.left = Math.random() * 100 + 'vw';
+    pieza.style.background = colores[Math.floor(Math.random() * colores.length)];
+    pieza.style.animationDuration = (2.5 + Math.random() * 1.5) + 's';
+    pieza.style.animationDelay = (Math.random() * 0.4) + 's';
+    if(Math.random() > 0.5) pieza.style.borderRadius = '50%';
+    container.appendChild(pieza);
+    setTimeout(()=> pieza.remove(), 4500);
+  }
+}
+
+/* ---- Header compacto al hacer scroll ---- */
+const headerEl = document.querySelector('header');
+let scrollTicking = false;
+window.addEventListener('scroll', ()=>{
+  if(scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(()=>{
+    if(window.scrollY > 40){ headerEl.classList.add('compact'); }
+    else{ headerEl.classList.remove('compact'); }
+    scrollTicking = false;
+  });
+}, { passive:true });
+
 /* ---- Tema claro/oscuro ---- */
+const ICON_SUN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+const ICON_MOON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
   const btn = document.getElementById('themeBtn');
-  if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+  if(btn) btn.innerHTML = theme === 'light' ? ICON_SUN : ICON_MOON;
 }
 let currentTheme = localStorage.getItem('meta_uber_theme') || 'dark';
 applyTheme(currentTheme);
@@ -720,6 +867,86 @@ document.getElementById('themeBtn').addEventListener('click', ()=>{
   applyTheme(currentTheme);
   // Los gráficos usan colores fijos legibles en ambos temas, no requieren redibujarse.
 });
+
+/* ---- Recordatorio diario ---- */
+const reminderToggle = document.getElementById('reminderToggle');
+const reminderSub = document.getElementById('reminderSub');
+
+function reminderIsEnabled(){
+  return localStorage.getItem('meta_uber_reminder') === 'true' && Notification.permission === 'granted';
+}
+
+function updateReminderUI(){
+  if(!('Notification' in window)){
+    reminderToggle.classList.remove('on');
+    reminderSub.textContent = 'Tu navegador no soporta notificaciones.';
+    reminderToggle.disabled = true;
+    return;
+  }
+  if(Notification.permission === 'denied'){
+    reminderToggle.classList.remove('on');
+    reminderSub.textContent = 'Bloqueaste los avisos para este sitio. Actívalos desde los ajustes del navegador.';
+    return;
+  }
+  const activo = reminderIsEnabled();
+  reminderToggle.classList.toggle('on', activo);
+  reminderSub.textContent = activo
+    ? 'Activado — te avisa si aún no registras nada hoy.'
+    : 'Te avisa si abres la app y aún no registras nada hoy.';
+}
+
+reminderToggle.addEventListener('click', async ()=>{
+  if(!('Notification' in window)){ return; }
+
+  const activo = reminderIsEnabled();
+  if(activo){
+    localStorage.setItem('meta_uber_reminder', 'false');
+    updateReminderUI();
+    return;
+  }
+
+  if(Notification.permission === 'granted'){
+    localStorage.setItem('meta_uber_reminder', 'true');
+    updateReminderUI();
+    return;
+  }
+
+  if(Notification.permission === 'denied'){
+    updateReminderUI();
+    return;
+  }
+
+  try{
+    const permiso = await Notification.requestPermission();
+    if(permiso === 'granted'){
+      localStorage.setItem('meta_uber_reminder', 'true');
+      new Notification('¡Listo!', { body:'Te avisaremos si te falta registrar tu avance del día.' });
+    }
+  }catch(e){
+    console.error('Error al pedir permiso de notificaciones', e);
+  }
+  updateReminderUI();
+});
+
+function checkDailyReminder(){
+  if(!reminderIsEnabled()) return;
+  const hoy = new Date().toISOString().slice(0,10);
+  const yaAvisadoHoy = localStorage.getItem('meta_uber_reminder_last') === hoy;
+  if(yaAvisadoHoy) return;
+  const registroDeHoy = entries.some(e => e.fecha === hoy);
+  if(registroDeHoy) return;
+
+  try{
+    new Notification('Meta de ahorro', {
+      body: 'No has registrado tu avance de hoy. ¡No pierdas la racha!'
+    });
+    localStorage.setItem('meta_uber_reminder_last', hoy);
+  }catch(e){
+    console.error('Error al mostrar el recordatorio', e);
+  }
+}
+
+updateReminderUI();
 
 /* ---- Menú deslizante (drawer) ---- */
 const drawer = document.getElementById('drawer');
@@ -788,6 +1015,8 @@ async function loadData(){
   document.getElementById('metaInput').value = meta;
   document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
   render();
+  const chartSkeleton = document.getElementById('chartSkeleton');
+  if(chartSkeleton) chartSkeleton.style.display = 'none';
 
   try{
     if(!firebaseReady){
@@ -831,25 +1060,70 @@ document.getElementById('metaInput').addEventListener('change', (ev)=>{
   if(!isNaN(v) && v > 0){ meta = v; saveMeta(); render(); }
 });
 
-document.getElementById('entryForm').addEventListener('submit', (ev)=>{
-  ev.preventDefault();
-  const fecha = document.getElementById('fecha').value;
-  const efectivo = parseFloat(document.getElementById('efectivo').value) || 0;
-  const tarjeta = parseFloat(document.getElementById('tarjeta').value) || 0;
-  const gastos = parseFloat(document.getElementById('gastos').value) || 0;
-  if(efectivo === 0 && tarjeta === 0 && gastos === 0) return;
-  entries.push({ id: Date.now().toString(), fecha, efectivo, tarjeta, gastos });
-  entries.sort((a,b)=> a.fecha.localeCompare(b.fecha));
-  saveEntries();
+/* ---- Editar / agregar registro ---- */
+let editingId = null;
+
+function enterEditMode(entry){
+  editingId = entry.id;
+  document.getElementById('fecha').value = entry.fecha;
+  document.getElementById('efectivo').value = entry.efectivo || '';
+  document.getElementById('tarjeta').value = entry.tarjeta || '';
+  document.getElementById('gastos').value = entry.gastos || '';
+  document.getElementById('editingBanner').classList.add('show');
+  document.getElementById('formSectionTitle').textContent = 'Editar registro';
+  document.getElementById('submitBtn').textContent = 'Guardar cambios';
+  document.getElementById('entryForm').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function exitEditMode(){
+  editingId = null;
+  document.getElementById('editingBanner').classList.remove('show');
+  document.getElementById('formSectionTitle').textContent = 'Registrar avance de hoy';
+  document.getElementById('submitBtn').textContent = 'Agregar avance';
+  document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
   document.getElementById('efectivo').value = '';
   document.getElementById('tarjeta').value = '';
   document.getElementById('gastos').value = '';
+}
+
+function editEntry(id){
+  const entry = entries.find(e => e.id === id);
+  if(!entry) return;
+  enterEditMode(entry);
+}
+
+document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
+
+document.getElementById('entryForm').addEventListener('submit', (ev)=>{
+  ev.preventDefault();
+  const fecha = document.getElementById('fecha').value;
+  const efectivo = Math.max(0, parseFloat(document.getElementById('efectivo').value) || 0);
+  const tarjeta = Math.max(0, parseFloat(document.getElementById('tarjeta').value) || 0);
+  const gastos = Math.max(0, parseFloat(document.getElementById('gastos').value) || 0);
+  if(efectivo === 0 && tarjeta === 0 && gastos === 0) return;
+
+  if(editingId){
+    const idx = entries.findIndex(e => e.id === editingId);
+    if(idx !== -1){
+      entries[idx] = { ...entries[idx], fecha, efectivo, tarjeta, gastos };
+    }
+    exitEditMode();
+  } else {
+    entries.push({ id: Date.now().toString(), fecha, efectivo, tarjeta, gastos });
+    document.getElementById('efectivo').value = '';
+    document.getElementById('tarjeta').value = '';
+    document.getElementById('gastos').value = '';
+  }
+
+  entries.sort((a,b)=> a.fecha.localeCompare(b.fecha));
+  saveEntries();
   render();
 });
 
 function deleteEntry(id){
   entries = entries.filter(e => e.id !== id);
   saveEntries();
+  if(editingId === id) exitEditMode();
   render();
 }
 
@@ -894,7 +1168,12 @@ function buildEntryRow(e){
         <span class="card">+${fmt(e.tarjeta)}</span>
         ${e.gastos ? `<span class="expense">-${fmt(e.gastos)}</span>` : ''}
       </div>
-      <button class="del" onclick="deleteEntry('${escapeHtml(e.id)}')">✕</button>
+      <div class="item-actions">
+        <button class="edit" onclick="editEntry('${escapeHtml(e.id)}')" aria-label="Editar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="del" onclick="deleteEntry('${escapeHtml(e.id)}')" aria-label="Borrar">✕</button>
+      </div>
     </div>
   `;
 }
@@ -924,6 +1203,16 @@ function render(){
   document.getElementById('pctSub').textContent = fmt(total) + ' / ' + fmt(meta);
   document.getElementById('roadFill').style.width = pct + '%';
   document.getElementById('carIcon').style.left = 'calc(' + pct + '% )';
+
+  // Celebración al llegar al 100% (una vez por meta cumplida, no en cada render)
+  if(pct >= 100 && meta > 0){
+    if(sessionStorage.getItem('meta_uber_celebrado') !== String(meta)){
+      lanzarConfeti();
+      sessionStorage.setItem('meta_uber_celebrado', String(meta));
+    }
+  } else {
+    sessionStorage.removeItem('meta_uber_celebrado');
+  }
 
   const HISTORY_LIMIT = 5;
   const listEl = document.getElementById('entriesList');
@@ -1108,7 +1397,9 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   }
 });
 
-loadData();
+loadData().then(()=>{
+  checkDailyReminder();
+});
 
 /* ---- Instalación como app (PWA) ---- */
 const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
