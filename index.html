@@ -48,6 +48,7 @@
     --red: #d9453f;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  svg{ flex-shrink:0; display:block; }
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);}
   html{ transition: background 0.25s ease; }
   body{
@@ -358,16 +359,16 @@
   .reminder-text strong{ font-size:13px; }
   .reminder-text span{ font-size:11.5px; color:var(--text-dim); }
   .reminder-toggle{
-    position:relative; width:44px; height:26px; border-radius:14px; flex-shrink:0;
+    position:relative; width:50px; height:30px; border-radius:16px; flex-shrink:0;
     background:var(--panel-2); border:1px solid var(--hairline); cursor:pointer;
     transition: background 0.2s ease;
   }
   .reminder-toggle::after{
-    content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%;
+    content:''; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%;
     background:var(--text-dim); transition: transform 0.2s ease, background 0.2s ease;
   }
   .reminder-toggle.on{ background:var(--green-dim); border-color:var(--green); }
-  .reminder-toggle.on::after{ transform:translateX(18px); background:var(--green); }
+  .reminder-toggle.on::after{ transform:translateX(20px); background:var(--green); }
   .reminder-hint{ font-size:10.5px; color:var(--text-dim); margin-top:10px; line-height:1.5; }
 
   .filter-panel{
@@ -434,6 +435,13 @@
   .modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   .modal-header h2{ margin:0; font-size:16px; font-weight:700; }
   .modal-body{ overflow-y:auto; }
+  .edit-modal-actions{ display:flex; gap:10px; margin-top:6px; }
+  .edit-modal-actions .add{ margin-top:0; width:auto; flex:1; }
+  .edit-cancel-btn{
+    flex:1; background:var(--panel-2); border:1px solid var(--hairline); color:var(--text);
+    border-radius:10px; padding:12px; font-size:15px; font-weight:600; cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;
+  }
 
   /* ---- Export / share ---- */
   .export-btn{
@@ -480,7 +488,7 @@
         <input type="number" inputmode="numeric" pattern="[0-9]*" id="metaInput" class="mono" value="0">
         <span style="color:var(--text-dim);">CLP</span>
       </div>
-      <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     </div>
   </header>
 
@@ -548,14 +556,7 @@
     <canvas id="progressChart"></canvas>
   </div>
 
-  <div class="section-title" id="formSectionTitle">Registrar avance de hoy</div>
-  <div class="editing-banner" id="editingBanner">
-    <span style="display:flex; align-items:center; gap:6px;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Editando un registro existente
-    </span>
-    <button type="button" id="cancelEditBtn">Cancelar</button>
-  </div>
+  <div class="section-title">Registrar avance de hoy</div>
   <form class="entry" id="entryForm">
     <div class="entry-row">
       <div class="field">
@@ -606,7 +607,7 @@
   <button class="ver-todo-btn" id="verTodoBtn" style="display:none;">Ver historial completo</button>
 
   <button class="export-btn" id="exportBtn">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
     Exportar / Compartir Excel
   </button>
   <div class="export-msg" id="exportMsg"></div>
@@ -660,6 +661,45 @@
     </div>
     <div class="modal-body">
       <div class="list" id="entriesListFull"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2>Editar registro</h2>
+      <button class="drawer-close" id="editModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="editForm">
+        <div class="entry-row">
+          <div class="field">
+            <label>Fecha</label>
+            <input type="date" id="editFecha" required>
+          </div>
+        </div>
+        <div class="entry-row">
+          <div class="field cash">
+            <label>Efectivo ($)</label>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="editEfectivo" placeholder="0" min="0">
+          </div>
+          <div class="field card">
+            <label>Tarjeta ($)</label>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="editTarjeta" placeholder="0" min="0">
+          </div>
+        </div>
+        <div class="entry-row">
+          <div class="field expense">
+            <label>Gastos ($)</label>
+            <input type="number" inputmode="numeric" pattern="[0-9]*" id="editGastos" placeholder="0" min="0">
+          </div>
+        </div>
+        <div class="edit-modal-actions">
+          <button type="button" class="edit-cancel-btn" id="editCancelBtn">Cancelar</button>
+          <button type="submit" class="add">Guardar cambios</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -851,8 +891,8 @@ window.addEventListener('scroll', ()=>{
 }, { passive:true });
 
 /* ---- Tema claro/oscuro ---- */
-const ICON_SUN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
-const ICON_MOON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const ICON_SUN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+const ICON_MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
@@ -1060,40 +1100,7 @@ document.getElementById('metaInput').addEventListener('change', (ev)=>{
   if(!isNaN(v) && v > 0){ meta = v; saveMeta(); render(); }
 });
 
-/* ---- Editar / agregar registro ---- */
-let editingId = null;
-
-function enterEditMode(entry){
-  editingId = entry.id;
-  document.getElementById('fecha').value = entry.fecha;
-  document.getElementById('efectivo').value = entry.efectivo || '';
-  document.getElementById('tarjeta').value = entry.tarjeta || '';
-  document.getElementById('gastos').value = entry.gastos || '';
-  document.getElementById('editingBanner').classList.add('show');
-  document.getElementById('formSectionTitle').textContent = 'Editar registro';
-  document.getElementById('submitBtn').textContent = 'Guardar cambios';
-  document.getElementById('entryForm').scrollIntoView({ behavior:'smooth', block:'center' });
-}
-
-function exitEditMode(){
-  editingId = null;
-  document.getElementById('editingBanner').classList.remove('show');
-  document.getElementById('formSectionTitle').textContent = 'Registrar avance de hoy';
-  document.getElementById('submitBtn').textContent = 'Agregar avance';
-  document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
-  document.getElementById('efectivo').value = '';
-  document.getElementById('tarjeta').value = '';
-  document.getElementById('gastos').value = '';
-}
-
-function editEntry(id){
-  const entry = entries.find(e => e.id === id);
-  if(!entry) return;
-  enterEditMode(entry);
-}
-
-document.getElementById('cancelEditBtn').addEventListener('click', exitEditMode);
-
+/* ---- Agregar registro (formulario principal, siempre en modo "agregar") ---- */
 document.getElementById('entryForm').addEventListener('submit', (ev)=>{
   ev.preventDefault();
   const fecha = document.getElementById('fecha').value;
@@ -1102,30 +1109,66 @@ document.getElementById('entryForm').addEventListener('submit', (ev)=>{
   const gastos = Math.max(0, parseFloat(document.getElementById('gastos').value) || 0);
   if(efectivo === 0 && tarjeta === 0 && gastos === 0) return;
 
-  if(editingId){
-    const idx = entries.findIndex(e => e.id === editingId);
-    if(idx !== -1){
-      entries[idx] = { ...entries[idx], fecha, efectivo, tarjeta, gastos };
-    }
-    exitEditMode();
-  } else {
-    entries.push({ id: Date.now().toString(), fecha, efectivo, tarjeta, gastos });
-    document.getElementById('efectivo').value = '';
-    document.getElementById('tarjeta').value = '';
-    document.getElementById('gastos').value = '';
-  }
-
+  entries.push({ id: Date.now().toString(), fecha, efectivo, tarjeta, gastos });
   entries.sort((a,b)=> a.fecha.localeCompare(b.fecha));
   saveEntries();
+  document.getElementById('efectivo').value = '';
+  document.getElementById('tarjeta').value = '';
+  document.getElementById('gastos').value = '';
   render();
 });
 
 function deleteEntry(id){
   entries = entries.filter(e => e.id !== id);
   saveEntries();
-  if(editingId === id) exitEditMode();
   render();
 }
+
+/* ---- Editar registro: ventana modal aparte ---- */
+let editingId = null;
+const editModalOverlay = document.getElementById('editModalOverlay');
+
+function editEntry(id){
+  const entry = entries.find(e => e.id === id);
+  if(!entry) return;
+  editingId = id;
+  document.getElementById('editFecha').value = entry.fecha;
+  document.getElementById('editEfectivo').value = entry.efectivo || '';
+  document.getElementById('editTarjeta').value = entry.tarjeta || '';
+  document.getElementById('editGastos').value = entry.gastos || '';
+  editModalOverlay.classList.add('open');
+}
+
+function closeEditModal(){
+  editModalOverlay.classList.remove('open');
+  editingId = null;
+}
+
+document.getElementById('editModalClose').addEventListener('click', closeEditModal);
+document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+editModalOverlay.addEventListener('click', (e)=>{
+  if(e.target === editModalOverlay) closeEditModal();
+});
+
+document.getElementById('editForm').addEventListener('submit', (ev)=>{
+  ev.preventDefault();
+  if(!editingId) return;
+
+  const fecha = document.getElementById('editFecha').value;
+  const efectivo = Math.max(0, parseFloat(document.getElementById('editEfectivo').value) || 0);
+  const tarjeta = Math.max(0, parseFloat(document.getElementById('editTarjeta').value) || 0);
+  const gastos = Math.max(0, parseFloat(document.getElementById('editGastos').value) || 0);
+  if(efectivo === 0 && tarjeta === 0 && gastos === 0) return;
+
+  const idx = entries.findIndex(e => e.id === editingId);
+  if(idx !== -1){
+    entries[idx] = { ...entries[idx], fecha, efectivo, tarjeta, gastos };
+    entries.sort((a,b)=> a.fecha.localeCompare(b.fecha));
+    saveEntries();
+    render();
+  }
+  closeEditModal();
+});
 
 /* ---- Filtro de fechas del historial (afecta lista + gráfico) ---- */
 function getFilteredEntries(){
@@ -1170,7 +1213,7 @@ function buildEntryRow(e){
       </div>
       <div class="item-actions">
         <button class="edit" onclick="editEntry('${escapeHtml(e.id)}')" aria-label="Editar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="del" onclick="deleteEntry('${escapeHtml(e.id)}')" aria-label="Borrar">✕</button>
       </div>
