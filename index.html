@@ -74,7 +74,7 @@
     color:var(--text-dim); margin:0 0 6px;
   }
   h1{ margin:0; font-size:26px; font-weight:700; letter-spacing:-0.02em; }
-  .meta-edit-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; }
+  .meta-edit-row{ display:flex; align-items:center; justify-content:flex-start; gap:10px; margin-top:10px; }
   .theme-btn{
     background:var(--panel); border:1px solid var(--hairline); border-radius:10px;
     width:36px; height:36px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
@@ -311,7 +311,7 @@
   .restore-msg.err{ color:var(--red); }
 
   /* ---- Header + hamburger ---- */
-  .header-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .header-row{ display:flex; align-items:flex-start; justify-content:flex-start; gap:12px; }
   .hamburger-btn{
     background:var(--panel); border:1px solid var(--hairline); border-radius:12px;
     width:42px; height:42px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
@@ -473,22 +473,22 @@
 
   <header>
     <div class="header-row">
-      <div>
-        <p class="eyebrow">Meta de ahorro &mdash; App</p>
-        <h1 id="titleGoal">Rumbo a la meta</h1>
-      </div>
       <button class="hamburger-btn" id="menuBtn" aria-label="Abrir menú">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         <span class="dot-badge" id="menuBadge"></span>
       </button>
+      <div>
+        <p class="eyebrow">Meta de ahorro &mdash; App</p>
+        <h1 id="titleGoal">Rumbo a la meta</h1>
+      </div>
     </div>
     <div class="meta-edit-row">
+      <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
       <div class="meta-edit">
         Meta total: $
         <input type="number" inputmode="numeric" pattern="[0-9]*" id="metaInput" class="mono" value="0">
         <span style="color:var(--text-dim);">CLP</span>
       </div>
-      <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
     </div>
   </header>
 
