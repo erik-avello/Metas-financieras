@@ -219,6 +219,18 @@
   .pc-text{ font-size:13px; line-height:1.4; }
   .pc-text strong{ color:var(--text); }
 
+  .expense-breakdown-card{
+    background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:12px;
+  }
+  .eb-row{ margin-bottom:10px; }
+  .eb-row:last-child{ margin-bottom:0; }
+  .eb-row-top{ display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px; }
+  .eb-row-label{ color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; }
+  .eb-row-value{ font-family:'JetBrains Mono',monospace; color:var(--red); flex-shrink:0; }
+  .eb-bar-track{ background:var(--panel-2); border-radius:4px; height:6px; overflow:hidden; }
+  .eb-bar-fill{ height:100%; background:var(--red); }
+
   .comparison-card{
     background:var(--panel); border:1px solid var(--hairline); border-radius:var(--radius);
     padding:14px 16px; margin-bottom:12px;
@@ -289,7 +301,12 @@
   .list{ display:flex; flex-direction:column; gap:8px; }
   .item{
     background:var(--panel); border:1px solid var(--hairline); border-radius:14px;
-    padding:12px 14px; display:flex; justify-content:space-between; align-items:center;
+    padding:12px 14px; display:flex; flex-direction:column; gap:4px;
+  }
+  .item-main{ display:flex; justify-content:space-between; align-items:center; }
+  .item-tag{
+    font-size:11px; color:var(--text-dim); padding-left:2px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .item .date{ font-size:13px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; min-width:70px;}
   .item .amounts{ display:flex; gap:14px; font-family:'JetBrains Mono',monospace; font-size:14px; }
@@ -643,6 +660,11 @@
     </div>
   </div>
 
+  <div class="expense-breakdown-card" id="expenseBreakdownCard" style="display:none;">
+    <div class="comp-title">Gastos por detalle</div>
+    <div id="expenseBreakdownList"></div>
+  </div>
+
   <div class="comparison-card" id="comparisonCard" style="display:none;">
     <div class="comp-title">Periodo filtrado vs. anterior</div>
     <div class="comp-row">
@@ -678,6 +700,10 @@
       <div class="field expense">
         <label>Gastos ($)</label>
         <input type="number" inputmode="numeric" pattern="[0-9]*" id="gastos" placeholder="0" min="0">
+      </div>
+      <div class="field expense">
+        <label>¿En qué? (opcional)</label>
+        <input type="text" id="gastoEtiqueta" placeholder="ej: bencina" maxlength="40">
       </div>
     </div>
     <button type="submit" class="add" id="submitBtn">Agregar avance</button>
@@ -793,6 +819,10 @@
           <div class="field expense">
             <label>Gastos ($)</label>
             <input type="number" inputmode="numeric" pattern="[0-9]*" id="editGastos" placeholder="0" min="0">
+          </div>
+          <div class="field expense">
+            <label>¿En qué? (opcional)</label>
+            <input type="text" id="editGastoEtiqueta" placeholder="ej: bencina" maxlength="40">
           </div>
         </div>
         <div class="edit-modal-actions">
@@ -1207,16 +1237,19 @@ document.getElementById('entryForm').addEventListener('submit', (ev)=>{
   const efectivo = Math.max(0, parseFloat(document.getElementById('efectivo').value) || 0);
   const tarjeta = Math.max(0, parseFloat(document.getElementById('tarjeta').value) || 0);
   const gastos = Math.max(0, parseFloat(document.getElementById('gastos').value) || 0);
+  const gastoEtiqueta = document.getElementById('gastoEtiqueta').value.trim().slice(0, 40);
   if(efectivo === 0 && tarjeta === 0 && gastos === 0) return;
 
-  entries.push({ id: Date.now().toString(), fecha, efectivo, tarjeta, gastos });
+  entries.push({ id: Date.now().toString(), fecha, efectivo, tarjeta, gastos, gastoEtiqueta: gastos > 0 ? gastoEtiqueta : '' });
   entries.sort((a,b)=> a.fecha.localeCompare(b.fecha));
   saveEntries();
   document.getElementById('efectivo').value = '';
   document.getElementById('tarjeta').value = '';
   document.getElementById('gastos').value = '';
+  document.getElementById('gastoEtiqueta').value = '';
   render();
 });
+
 
 function deleteEntry(id){
   entries = entries.filter(e => e.id !== id);
@@ -1236,6 +1269,7 @@ function editEntry(id){
   document.getElementById('editEfectivo').value = entry.efectivo || '';
   document.getElementById('editTarjeta').value = entry.tarjeta || '';
   document.getElementById('editGastos').value = entry.gastos || '';
+  document.getElementById('editGastoEtiqueta').value = entry.gastoEtiqueta || '';
   editModalOverlay.classList.add('open');
 }
 
@@ -1258,11 +1292,12 @@ document.getElementById('editForm').addEventListener('submit', (ev)=>{
   const efectivo = Math.max(0, parseFloat(document.getElementById('editEfectivo').value) || 0);
   const tarjeta = Math.max(0, parseFloat(document.getElementById('editTarjeta').value) || 0);
   const gastos = Math.max(0, parseFloat(document.getElementById('editGastos').value) || 0);
+  const gastoEtiqueta = document.getElementById('editGastoEtiqueta').value.trim().slice(0, 40);
   if(efectivo === 0 && tarjeta === 0 && gastos === 0) return;
 
   const idx = entries.findIndex(e => e.id === editingId);
   if(idx !== -1){
-    entries[idx] = { ...entries[idx], fecha, efectivo, tarjeta, gastos };
+    entries[idx] = { ...entries[idx], fecha, efectivo, tarjeta, gastos, gastoEtiqueta: gastos > 0 ? gastoEtiqueta : '' };
     entries.sort((a,b)=> a.fecha.localeCompare(b.fecha));
     saveEntries();
     render();
@@ -1411,6 +1446,20 @@ function formatDateLong(iso){
   return d.toLocaleDateString('es-CL', { day:'numeric', month:'long', year:'numeric' });
 }
 
+/* Agrupa los gastos por la etiqueta de texto libre que el usuario escribió */
+function computeExpenseBreakdown(filteredEntries){
+  const grupos = {};
+  filteredEntries.forEach(e => {
+    if(!e.gastos) return;
+    const clave = (e.gastoEtiqueta || '').trim() || 'Sin detalle';
+    grupos[clave] = (grupos[clave] || 0) + e.gastos;
+  });
+  return Object.entries(grupos)
+    .map(([etiqueta, monto]) => ({ etiqueta, monto }))
+    .sort((a,b)=> b.monto - a.monto)
+    .slice(0, 6);
+}
+
 function renderAnalysis(){
   const filtered = getFilteredEntries();
 
@@ -1454,6 +1503,28 @@ function renderAnalysis(){
     document.getElementById('anaPeorFecha').textContent = 'Sin datos aún';
   }
 
+  // Gastos por detalle (etiqueta libre), respeta el filtro activo
+  const desglose = computeExpenseBreakdown(filtered);
+  const ebCard = document.getElementById('expenseBreakdownCard');
+  if(desglose.length === 0){
+    ebCard.style.display = 'none';
+  } else {
+    ebCard.style.display = 'block';
+    const maxMonto = desglose[0].monto;
+    document.getElementById('expenseBreakdownList').innerHTML = desglose.map(g => {
+      const pct = maxMonto > 0 ? Math.round((g.monto / maxMonto) * 100) : 0;
+      return `
+        <div class="eb-row">
+          <div class="eb-row-top">
+            <span class="eb-row-label">${escapeHtml(g.etiqueta)}</span>
+            <span class="eb-row-value">${fmt(g.monto)}</span>
+          </div>
+          <div class="eb-bar-track"><div class="eb-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+      `;
+    }).join('');
+  }
+
   // Comparación de periodos (solo si hay un rango de fechas activo)
   const comp = computePeriodComparison();
   const compCard = document.getElementById('comparisonCard');
@@ -1484,18 +1555,21 @@ function renderAnalysis(){
 function buildEntryRow(e){
   return `
     <div class="item">
-      <div class="date">${escapeHtml(formatDate(e.fecha))}</div>
-      <div class="amounts">
-        <span class="cash">+${fmt(e.efectivo)}</span>
-        <span class="card">+${fmt(e.tarjeta)}</span>
-        ${e.gastos ? `<span class="expense">-${fmt(e.gastos)}</span>` : ''}
+      <div class="item-main">
+        <div class="date">${escapeHtml(formatDate(e.fecha))}</div>
+        <div class="amounts">
+          <span class="cash">+${fmt(e.efectivo)}</span>
+          <span class="card">+${fmt(e.tarjeta)}</span>
+          ${e.gastos ? `<span class="expense">-${fmt(e.gastos)}</span>` : ''}
+        </div>
+        <div class="item-actions">
+          <button class="edit" onclick="editEntry('${escapeHtml(e.id)}')" aria-label="Editar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="del" onclick="deleteEntry('${escapeHtml(e.id)}')" aria-label="Borrar">✕</button>
+        </div>
       </div>
-      <div class="item-actions">
-        <button class="edit" onclick="editEntry('${escapeHtml(e.id)}')" aria-label="Editar">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="del" onclick="deleteEntry('${escapeHtml(e.id)}')" aria-label="Borrar">✕</button>
-      </div>
+      ${e.gastoEtiqueta ? `<div class="item-tag">💸 ${escapeHtml(e.gastoEtiqueta)}</div>` : ''}
     </div>
   `;
 }
@@ -1660,10 +1734,11 @@ function construirLibroExcel(){
     Efectivo: e.efectivo,
     Tarjeta: e.tarjeta,
     Gastos: e.gastos || 0,
+    'Detalle del gasto': e.gastoEtiqueta || '',
     'Neto del día': e.efectivo + e.tarjeta - (e.gastos || 0)
   }));
   const hoja = XLSX.utils.json_to_sheet(filas);
-  hoja['!cols'] = [{wch:12},{wch:12},{wch:12},{wch:12},{wch:14}];
+  hoja['!cols'] = [{wch:12},{wch:12},{wch:12},{wch:12},{wch:18},{wch:14}];
   const libro = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(libro, hoja, 'Historial');
   return libro;
